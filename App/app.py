@@ -10,6 +10,31 @@ def load_image(img):
 	im = Image.open(img)
 	return im
 
+def augment_img(input_img,slider):
+	Npic = slider
+	rotation_range = 20
+	width_shift_range = 0.2 
+	height_shift_range = 0.2
+	shear_range = 0.2 
+	zoom_range = 0.2 
+	horizontal_flip = True 
+	datagen = ImageDataGenerator( 
+		rotation_range = rotation_range,
+		width_shift_range = width_shift_range,
+		height_shift_range = height_shift_range,
+		shear_range = shear_range,
+		zoom_range = zoom_range,
+		horizontal_flip = horizontal_flip,
+		fill_mode = 'nearest')    
+		
+	img = expand_dims(input_img, axis=0)
+	pic = datagen.flow(img, batch_size =1)
+
+	batch = pic.next()
+	result = batch[0].astype('uint8')
+	
+	return result
+
 def main():
     #Add a header and expander in side bar
 	imgs = []
@@ -78,31 +103,10 @@ def main():
 					isRandom = 'Generate Dataset'
 					converted_img = np.array(image.convert('RGB'))
 					slider = st.sidebar.slider('Random Pics', 1, 100, 1, step=1)
-					Npic = slider
-					rotation_range = 20
-					width_shift_range = 0.2 
-					height_shift_range = 0.2
-					shear_range = 0.2 
-					zoom_range = 0.2 
-					horizontal_flip = True 
-					datagen = ImageDataGenerator( 
-						rotation_range = rotation_range,
-						width_shift_range = width_shift_range,
-						height_shift_range = height_shift_range,
-						shear_range = shear_range,
-						zoom_range = zoom_range,
-						horizontal_flip = horizontal_flip,
-						fill_mode = 'nearest')
-
-					img = expand_dims(converted_img, axis=0)
-					pic = datagen.flow(img, batch_size =1)
-
-					for i in range(0, Npic) :
-						batch = pic.next()
-						img_result = batch[0].astype('uint8')
+					for i in range(0, slider) :
+						img_result = augment_img(converted_img,slider)
 						imgs.append(img_result)
-
-					st.markdown('<p style="text-align: center;">Results Below</p>',unsafe_allow_html=True)
+					# st.markdown('<p style="text-align: center;">Results Below</p>',unsafe_allow_html=True)
 			else: 
 					st.image(image, width)
 
