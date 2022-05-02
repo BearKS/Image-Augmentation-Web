@@ -3,8 +3,8 @@ import cv2
 from PIL import Image, ImageEnhance
 import numpy as np
 import os
-
-
+from keras.preprocessing.image import ImageDataGenerator
+from numpy import expand_dims
 @st.cache
 def load_image(img):
 	im = Image.open(img)
@@ -12,6 +12,8 @@ def load_image(img):
 
 def main():
     #Add a header and expander in side bar
+	imgs = []
+	isRandom = ''
 	st.sidebar.markdown('<p class="font">My Photo Converter App</p>', unsafe_allow_html=True)
 	with st.sidebar.expander("About the App"):
 		st.write("""
@@ -44,7 +46,7 @@ def main():
 		#Add conditional statements to take the user input values
 		with col2:
 			st.markdown('<p style="text-align: center;">After</p>',unsafe_allow_html=True)
-			filter = st.sidebar.radio('Covert your photo to:', ['Original','Gray Image','Black and White', 'Pencil Sketch', 'Blur Effect'])
+			filter = st.sidebar.radio('Covert your photo to:', ['Original','Gray Image','Black and White', 'Pencil Sketch', 'Blur Effect', 'Generate Dataset'])
 			if filter == 'Gray Image':
 					converted_img = np.array(image.convert('RGB'))
 					gray_scale = cv2.cvtColor(converted_img, cv2.COLOR_RGB2GRAY)
@@ -72,9 +74,52 @@ def main():
 					converted_img = cv2.cvtColor(converted_img, cv2.COLOR_RGB2BGR)
 					blur_image = cv2.GaussianBlur(converted_img, (slider,slider), 0, 0)
 					st.image(blur_image, channels='BGR', width=500) 
-     
+			elif filter == 'Generate Dataset':
+					isRandom = 'Generate Dataset'
+					converted_img = np.array(image.convert('RGB'))
+					slider = st.sidebar.slider('Random Pics', 1, 100, 1, step=1)
+					Npic = slider
+					rotation_range = 20
+					width_shift_range = 0.2 
+					height_shift_range = 0.2
+					shear_range = 0.2 
+					zoom_range = 0.2 
+					horizontal_flip = True 
+					datagen = ImageDataGenerator( 
+						rotation_range = rotation_range,
+						width_shift_range = width_shift_range,
+						height_shift_range = height_shift_range,
+						shear_range = shear_range,
+						zoom_range = zoom_range,
+						horizontal_flip = horizontal_flip,
+						fill_mode = 'nearest')
+
+					img = expand_dims(converted_img, axis=0)
+					pic = datagen.flow(img, batch_size =1)
+
+					for i in range(0, Npic) :
+						batch = pic.next()
+						img_result = batch[0].astype('uint8')
+						imgs.append(img_result)
+
+					st.markdown('<p style="text-align: center;">Results Below</p>',unsafe_allow_html=True)
 			else: 
 					st.image(image, width)
+
+		if isRandom == 'Generate Dataset':
+			col1, col2, col3, col4 = st.columns( [2, 2, 2, 2]) 
+			with col1:
+				for i in range(0,len(imgs),4):
+					st.image(imgs[i], channels='RGB', width=180)
+			with col2:
+				for i in range(1,len(imgs),4):
+					st.image(imgs[i], channels='RGB', width=180) 
+			with col3:
+				for i in range(2,len(imgs),4):
+					st.image(imgs[i], channels='RGB', width=180) 
+			with col4:
+				for i in range(3,len(imgs),4):
+					st.image(imgs[i], channels='RGB', width=180)			
 
 #Run code 
 if __name__ == '__main__':
