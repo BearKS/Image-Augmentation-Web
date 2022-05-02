@@ -5,6 +5,12 @@ import numpy as np
 import os
 from keras.preprocessing.image import ImageDataGenerator
 from numpy import expand_dims
+
+# Global Variables
+width = 500
+width_aug = 170
+
+
 @st.cache
 def load_image(img):
 	im = Image.open(img)
@@ -52,7 +58,7 @@ def main():
 			Use this simple app to convert your favorite photo to a pencil sketch, a grayscale image or an image with blurring effect.  \n  \nThis app was created by Sharone Li as a side project to learn Streamlit and computer vision. Hope you enjoy!
 		""")
 		image = Image.open(r'./assets/logo.jpg') #Brand logo image (optional)
-	width = 500
+
 	#Create two columns with different width
 	col1, col2 = st.columns( [0.8, 0.2])
 	with col1:               # To display the header text using css style
@@ -99,8 +105,8 @@ def main():
      
 			elif filter == 'Blur Effect':
 					slider = st.sidebar.slider('Adjust the intensity', 5, 81, 33, step=2) 
-					converted_img = rgb_img(converted_img)
-					blur_image = cv2.GaussianBlur(converted_img, (slider,slider), 0, 0)
+					converted_imgb = cv2.cvtColor(converted_img, cv2.COLOR_BGR2RGB)
+					blur_image = cv2.GaussianBlur(converted_imgb, (slider,slider), 0, 0)
 					st.image(blur_image, channels='BGR', width = width) 
      
 			elif filter == 'Generate Dataset':
@@ -116,19 +122,19 @@ def main():
 					st.image(image, width)
 
 		if isRandom == 'Generate Dataset':
-			col1, col2, col3, col4 = st.columns( [2, 2, 2, 2]) 
+			col1, col2, col3, col4 = st.columns( [3, 3, 3, 3]) 
 			with col1:
 				for i in range(0,len(imgs),4):
-					st.image(imgs[i], channels='RGB', width=180)
+					st.image(imgs[i], channels='RGB', width=width_aug)
 			with col2:
 				for i in range(1,len(imgs),4):
-					st.image(imgs[i], channels='RGB', width=180) 
+					st.image(imgs[i], channels='RGB', width=width_aug) 
 			with col3:
 				for i in range(2,len(imgs),4):
-					st.image(imgs[i], channels='RGB', width=180) 
+					st.image(imgs[i], channels='RGB', width=width_aug) 
 			with col4:
 				for i in range(3,len(imgs),4):
-					st.image(imgs[i], channels='RGB', width=180)			
+					st.image(imgs[i], channels='RGB', width=width_aug)			
 
 #Run code 
 if __name__ == '__main__':
