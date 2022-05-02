@@ -4,6 +4,7 @@ from PIL import Image, ImageEnhance
 import numpy as np
 import os
 
+
 @st.cache
 def load_image(img):
 	im = Image.open(img)
@@ -11,13 +12,13 @@ def load_image(img):
 
 def main():
     #Add a header and expander in side bar
-	st.sidebar.markdown('<p class="font">My First Photo Converter App</p>', unsafe_allow_html=True)
+	st.sidebar.markdown('<p class="font">My Photo Converter App</p>', unsafe_allow_html=True)
 	with st.sidebar.expander("About the App"):
 		st.write("""
 			Use this simple app to convert your favorite photo to a pencil sketch, a grayscale image or an image with blurring effect.  \n  \nThis app was created by Sharone Li as a side project to learn Streamlit and computer vision. Hope you enjoy!
 		""")
 		image = Image.open(r'./assets/logo.jpg') #Brand logo image (optional)
-
+	width = 500
 	#Create two columns with different width
 	col1, col2 = st.columns( [0.8, 0.2])
 	with col1:               # To display the header text using css style
@@ -27,7 +28,7 @@ def main():
 		st.markdown('<p class="font">Upload your photo here...</p>', unsafe_allow_html=True)
 		
 	with col2:               # To display brand logo
-		st.image(image,  width=150)
+		st.image(image,  width)
 	#Add file uploader to allow users to upload photos
 	uploaded_file = st.file_uploader("", type=['jpg','png','jpeg'])
  
@@ -38,7 +39,7 @@ def main():
 		col1, col2 = st.columns( [0.5, 0.5])
 		with col1:
 			st.markdown('<p style="text-align: center;">Before</p>',unsafe_allow_html=True)
-			st.image(image,width=300)  
+			st.image(image,width)  
 	
 		#Add conditional statements to take the user input values
 		with col2:
@@ -47,13 +48,15 @@ def main():
 			if filter == 'Gray Image':
 					converted_img = np.array(image.convert('RGB'))
 					gray_scale = cv2.cvtColor(converted_img, cv2.COLOR_RGB2GRAY)
-					st.image(gray_scale, width=300)
+					st.image(gray_scale, width)
+     
 			elif filter == 'Black and White':
 					converted_img = np.array(image.convert('RGB'))
 					gray_scale = cv2.cvtColor(converted_img, cv2.COLOR_RGB2GRAY)
 					slider = st.sidebar.slider('Adjust the intensity', 1, 255, 127, step=1)
 					(thresh, blackAndWhiteImage) = cv2.threshold(gray_scale, slider, 255, cv2.THRESH_BINARY)
-					st.image(blackAndWhiteImage, width=300)
+					st.image(blackAndWhiteImage, width)
+     
 			elif filter == 'Pencil Sketch':
 					converted_img = np.array(image.convert('RGB')) 
 					gray_scale = cv2.cvtColor(converted_img, cv2.COLOR_RGB2GRAY)
@@ -61,15 +64,18 @@ def main():
 					slider = st.sidebar.slider('Adjust the intensity', 25, 255, 125, step=2)
 					blur_image = cv2.GaussianBlur(inv_gray, (slider,slider), 0, 0)
 					sketch = cv2.divide(gray_scale, 255 - blur_image, scale=256)
-					st.image(sketch, width=300) 
+					st.image(sketch, width) 
+     
 			elif filter == 'Blur Effect':
 					converted_img = np.array(image.convert('RGB'))
-					slider = st.sidebar.slider('Adjust the intensity', 5, 81, 33, step=2)
+					slider = st.sidebar.slider('Adjust the intensity', 5, 81, 33, step=2) 
 					converted_img = cv2.cvtColor(converted_img, cv2.COLOR_RGB2BGR)
 					blur_image = cv2.GaussianBlur(converted_img, (slider,slider), 0, 0)
-					st.image(blur_image, channels='BGR', width=300) 
+					st.image(blur_image, channels='BGR', width=500) 
+     
 			else: 
-					st.image(image, width=300)
+					st.image(image, width)
 
+#Run code 
 if __name__ == '__main__':
 	main()
