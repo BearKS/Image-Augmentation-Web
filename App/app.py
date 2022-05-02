@@ -10,8 +10,15 @@ def load_image(img):
 	im = Image.open(img)
 	return im
 
-def augment_img(input_img,slider):
-	Npic = slider
+def rgb_img(input_img):
+    rgb_image = np.array(input_img.convert('RGB'))
+    return rgb_image
+
+def gray_img(input_img):
+    gray_image = cv2.cvtColor(input_img, cv2.COLOR_RGB2GRAY)
+    return gray_image
+
+def augment_img(input_img):
 	rotation_range = 20
 	width_shift_range = 0.2 
 	height_shift_range = 0.2
@@ -29,11 +36,11 @@ def augment_img(input_img,slider):
 		
 	img = expand_dims(input_img, axis=0)
 	pic = datagen.flow(img, batch_size =1)
-
+ 
 	batch = pic.next()
 	result = batch[0].astype('uint8')
-	
 	return result
+
 
 def main():
     #Add a header and expander in side bar
@@ -62,7 +69,7 @@ def main():
 	#Add 'before' and 'after' columns
 	if uploaded_file is not None:
 		image = Image.open(uploaded_file)
-		
+		converted_img = rgb_img(image)
 		col1, col2 = st.columns( [0.5, 0.5])
 		with col1:
 			st.markdown('<p style="text-align: center;">Before</p>',unsafe_allow_html=True)
@@ -73,20 +80,17 @@ def main():
 			st.markdown('<p style="text-align: center;">After</p>',unsafe_allow_html=True)
 			filter = st.sidebar.radio('Covert your photo to:', ['Original','Gray Image','Black and White', 'Pencil Sketch', 'Blur Effect', 'Generate Dataset'])
 			if filter == 'Gray Image':
-					converted_img = np.array(image.convert('RGB'))
-					gray_scale = cv2.cvtColor(converted_img, cv2.COLOR_RGB2GRAY)
+					gray_scale = gray_img(converted_img)
 					st.image(gray_scale, width)
      
 			elif filter == 'Black and White':
-					converted_img = np.array(image.convert('RGB'))
-					gray_scale = cv2.cvtColor(converted_img, cv2.COLOR_RGB2GRAY)
+					gray_scale = gray_img(converted_img)
 					slider = st.sidebar.slider('Adjust the intensity', 1, 255, 127, step=1)
 					(thresh, blackAndWhiteImage) = cv2.threshold(gray_scale, slider, 255, cv2.THRESH_BINARY)
 					st.image(blackAndWhiteImage, width)
      
 			elif filter == 'Pencil Sketch':
-					converted_img = np.array(image.convert('RGB')) 
-					gray_scale = cv2.cvtColor(converted_img, cv2.COLOR_RGB2GRAY)
+					gray_scale = gray_img(converted_img)
 					inv_gray = 255 - gray_scale
 					slider = st.sidebar.slider('Adjust the intensity', 25, 255, 125, step=2)
 					blur_image = cv2.GaussianBlur(inv_gray, (slider,slider), 0, 0)
@@ -94,19 +98,20 @@ def main():
 					st.image(sketch, width) 
      
 			elif filter == 'Blur Effect':
-					converted_img = np.array(image.convert('RGB'))
 					slider = st.sidebar.slider('Adjust the intensity', 5, 81, 33, step=2) 
-					converted_img = cv2.cvtColor(converted_img, cv2.COLOR_RGB2BGR)
+					converted_img = rgb_img(converted_img)
 					blur_image = cv2.GaussianBlur(converted_img, (slider,slider), 0, 0)
-					st.image(blur_image, channels='BGR', width=500) 
+					st.image(blur_image, channels='BGR', width = width) 
+     
 			elif filter == 'Generate Dataset':
 					isRandom = 'Generate Dataset'
-					converted_img = np.array(image.convert('RGB'))
 					slider = st.sidebar.slider('Random Pics', 1, 100, 1, step=1)
-					for i in range(0, slider) :
-						img_result = augment_img(converted_img,slider)
+					Npic = slider
+					for i in range(0, Npic) :
+						img_result = augment_img(converted_img)
 						imgs.append(img_result)
 					# st.markdown('<p style="text-align: center;">Results Below</p>',unsafe_allow_html=True)
+			#Default Original Image
 			else: 
 					st.image(image, width)
 
