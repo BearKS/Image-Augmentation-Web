@@ -23,7 +23,7 @@ except ValueError:  # Already removed
 VERSION = ".".join(st.__version__.split(".")[:2])
 
 demo_pages = {
-	"st.camera_input": orchestrator.show_examples,
+	"Take a Photo": orchestrator.show_examples,
 }
 
 
@@ -92,7 +92,7 @@ def main():
 
 	if len(pages):
 		pages.insert(0, "Upload ")
-		st.sidebar.title(f"Welcome🎈")
+		st.sidebar.title(f"📸 BearKS")
 		query_params = st.experimental_get_query_params()
 		if "page" in query_params and query_params["page"][0] == "headliner":
 			index = 1
@@ -109,7 +109,7 @@ def main():
 		# uploaded_file = Image.fromarray(uploaded_file, 'RGB')
 		# uploaded_file.save('./photo.jpg')
 	else:
-		st.image(image,None,width=50) # Display logo
+		st.image(image,None,width=100) # Display logo
 		st.header("Upload your image here...")
 		#file uploader to allow users to upload photos
 		uploaded_file = st.file_uploader("", type=['jpg','png','jpeg'])
@@ -136,12 +136,18 @@ def main():
 			if filter == 'Gray Image':
 					gray_scale = gray_img(converted_img)
 					st.image(gray_scale,None, width)
+					if st.button('Save Image'):
+							gray_scale2 = Image.fromarray(gray_scale)
+							gray_scale2.save('./result_dataset/gray_image.png') 
 	 
 			elif filter == 'Black and White':
 					gray_scale = gray_img(converted_img)
 					slider = st.sidebar.slider('Adjust the intensity', 1, 255, 127, step=1)
 					(thresh, blackAndWhiteImage) = cv2.threshold(gray_scale, slider, 255, cv2.THRESH_BINARY)
 					st.image(blackAndWhiteImage,None, width)
+					if st.button('Save Image'):
+							blackAndWhiteImage2 = Image.fromarray(blackAndWhiteImage)
+							blackAndWhiteImage2.save('./result_dataset/bw_image.png') 
 	 
 			elif filter == 'Pencil Sketch':
 					gray_scale = gray_img(converted_img)
@@ -149,13 +155,21 @@ def main():
 					slider = st.sidebar.slider('Adjust the intensity', 25, 255, 125, step=2)
 					blur_image = cv2.GaussianBlur(inv_gray, (slider,slider), 0, 0)
 					sketch = cv2.divide(gray_scale, 255 - blur_image, scale=256)
-					st.image(sketch,None, width) 
+					st.image(sketch,None, width)
+					if st.button('Save Image'):
+							sketch2 = Image.fromarray(sketch)
+							sketch2.save('./result_dataset/sketch_image.png') 
 	 
 			elif filter == 'Blur Effect':
 					slider = st.sidebar.slider('Adjust the intensity', 5, 81, 33, step=2) 
 					converted_imgb = cv2.cvtColor(converted_img, cv2.COLOR_BGR2RGB)
 					blur_image = cv2.GaussianBlur(converted_imgb, (slider,slider), 0, 0)
+					blur_image2 = cv2.cvtColor(blur_image, cv2.COLOR_RGB2BGR)
 					st.image(blur_image, channels='BGR', width = width) 
+					if st.button('Save Image'):
+							blur = Image.fromarray(blur_image2)
+							blur.save('./result_dataset/blur_image.png')
+
 	 
 			elif filter == 'Generate Dataset':
 					isRandom = 'Generate Dataset'
@@ -190,9 +204,13 @@ def main():
 					for i in range(0, Npic) :
 						img_result = augment_img(converted_img,rotate_int,wshift_int,hshift_int,shear_int,zoom_int,horizon,vertical)
 						imgs.append(img_result)
-						img_dataset = Image.fromarray(imgs[i], 'RGB')
-						img_dataset.save('./result_dataset/img'+ str(i) +'.jpg')
+						# img_dataset = Image.fromarray(imgs[i], 'RGB')
+						# img_dataset.save('./result_dataset/img'+ str(i) +'.jpg')
 					st.image(imgs[0],None, width) 
+					if st.button('Save Image'):
+						for i in range(0, Npic):
+							img_dataset = Image.fromarray(imgs[i], 'RGB')
+							img_dataset.save('./result_dataset/img'+ str(i) +'.jpg')
 					# img = Image.fromarray(imgs[0], 'RGB')
 					# img.save('./result_dataset/my.png')
 					# image2 = Image.open(r'./result_dataset/my.png')
