@@ -7,9 +7,8 @@ from keras.preprocessing.image import ImageDataGenerator
 from numpy import expand_dims
 
 # Global Variables
-width = 500
-width_aug = 170
-
+width = 700
+width_aug = 280
 
 @st.cache
 def load_image(img):
@@ -17,27 +16,22 @@ def load_image(img):
 	return im
 
 def rgb_img(input_img):
-    rgb_image = np.array(input_img.convert('RGB'))
-    return rgb_image
+	rgb_image = np.array(input_img.convert('RGB'))
+	return rgb_image
 
 def gray_img(input_img):
-    gray_image = cv2.cvtColor(input_img, cv2.COLOR_RGB2GRAY)
-    return gray_image
+	gray_image = cv2.cvtColor(input_img, cv2.COLOR_RGB2GRAY)
+	return gray_image
 
-def augment_img(input_img):
-	rotation_range = 20
-	width_shift_range = 0.2 
-	height_shift_range = 0.2
-	shear_range = 0.2 
-	zoom_range = 0.2 
-	horizontal_flip = True 
+def augment_img(input_img,input_rotate,input_w_shift,input_h_shift,input_shear,input_zoom,input_horizon,input_vertical):
 	datagen = ImageDataGenerator( 
-		rotation_range = rotation_range,
-		width_shift_range = width_shift_range,
-		height_shift_range = height_shift_range,
-		shear_range = shear_range,
-		zoom_range = zoom_range,
-		horizontal_flip = horizontal_flip,
+		rotation_range = input_rotate,
+		width_shift_range = input_w_shift,
+		height_shift_range = input_h_shift,
+		shear_range = input_shear,
+		zoom_range = input_zoom,
+		horizontal_flip = input_horizon,
+		vertical_flip = input_vertical,
 		fill_mode = 'nearest')    
 		
 	img = expand_dims(input_img, axis=0)
@@ -49,92 +43,124 @@ def augment_img(input_img):
 
 
 def main():
-    #Add a header and expander in side bar
+	Npic = 0
 	imgs = []
 	isRandom = ''
-	st.sidebar.markdown('<p class="font">My Photo Converter App</p>', unsafe_allow_html=True)
+  
+	st.sidebar.title("Image Augmentation")
 	with st.sidebar.expander("About the App"):
 		st.write("""
-			Use this simple app to convert your favorite photo to a pencil sketch, a grayscale image or an image with blurring effect.  \n  \nThis app was created by Sharone Li as a side project to learn Streamlit and computer vision. Hope you enjoy!
+			Web Application สำหรับทำ Image Augmentation โดยใช้ Python \n  \n
+			This web portal has been developed for educational purposes only. No intention to infringe any copyright or trademark.
 		""")
-		image = Image.open(r'./assets/logo.jpg') #Brand logo image (optional)
+		image = Image.open(r'./assets/logo.png') #Brand logo image (optional)
 
-	#Create two columns with different width
-	col1, col2 = st.columns( [0.8, 0.2])
-	with col1:               # To display the header text using css style
-		st.markdown(""" <style> .font {
-		font-size:35px ; font-family: 'fantasy'; color: #FF9633;} 
-		</style> """, unsafe_allow_html=True)
-		st.markdown('<p class="font">Upload your photo here...</p>', unsafe_allow_html=True)
-		
-	with col2:               # To display brand logo
-		st.image(image,  width)
-	#Add file uploader to allow users to upload photos
+	#Header!
+	st.image(image,None,width=50) # Display logo
+	st.header("Upload your image here...")
+	#file uploader to allow users to upload photos
 	uploaded_file = st.file_uploader("", type=['jpg','png','jpeg'])
  
-	#Add 'before' and 'after' columns
 	if uploaded_file is not None:
 		image = Image.open(uploaded_file)
 		converted_img = rgb_img(image)
-		col1, col2 = st.columns( [0.5, 0.5])
+		col1, col2 = st.columns( [1, 1])
 		with col1:
-			st.markdown('<p style="text-align: center;">Before</p>',unsafe_allow_html=True)
-			st.image(image,width)  
+			st.subheader("Before")
+			st.image(image,None,width)  
 	
 		#Add conditional statements to take the user input values
 		with col2:
-			st.markdown('<p style="text-align: center;">After</p>',unsafe_allow_html=True)
+			st.subheader("After")
 			filter = st.sidebar.radio('Covert your photo to:', ['Original','Gray Image','Black and White', 'Pencil Sketch', 'Blur Effect', 'Generate Dataset'])
 			if filter == 'Gray Image':
 					gray_scale = gray_img(converted_img)
-					st.image(gray_scale, width)
-     
+					st.image(gray_scale,None, width)
+	 
 			elif filter == 'Black and White':
 					gray_scale = gray_img(converted_img)
 					slider = st.sidebar.slider('Adjust the intensity', 1, 255, 127, step=1)
 					(thresh, blackAndWhiteImage) = cv2.threshold(gray_scale, slider, 255, cv2.THRESH_BINARY)
-					st.image(blackAndWhiteImage, width)
-     
+					st.image(blackAndWhiteImage,None, width)
+	 
 			elif filter == 'Pencil Sketch':
 					gray_scale = gray_img(converted_img)
 					inv_gray = 255 - gray_scale
 					slider = st.sidebar.slider('Adjust the intensity', 25, 255, 125, step=2)
 					blur_image = cv2.GaussianBlur(inv_gray, (slider,slider), 0, 0)
 					sketch = cv2.divide(gray_scale, 255 - blur_image, scale=256)
-					st.image(sketch, width) 
-     
+					st.image(sketch,None, width) 
+	 
 			elif filter == 'Blur Effect':
 					slider = st.sidebar.slider('Adjust the intensity', 5, 81, 33, step=2) 
 					converted_imgb = cv2.cvtColor(converted_img, cv2.COLOR_BGR2RGB)
 					blur_image = cv2.GaussianBlur(converted_imgb, (slider,slider), 0, 0)
 					st.image(blur_image, channels='BGR', width = width) 
-     
+	 
 			elif filter == 'Generate Dataset':
 					isRandom = 'Generate Dataset'
-					slider = st.sidebar.slider('Random Pics', 1, 100, 1, step=1)
-					Npic = slider
+					Npic = st.sidebar.slider('Random Pics', 1, 100, 1, step=1)
+					agree = st.sidebar.checkbox('Custom Random')
+					if agree:
+							st.sidebar.write('Edit Data Genarator!')
+							rotate_int = st.sidebar.slider('Random Rotation', 1.0, 20.0, 1.0)
+							wshift_int = st.sidebar.slider('Random Width Shift', 0.0, 0.2, 0.05)
+							hshift_int = st.sidebar.slider('Random Height Shift', 0.0, 0.2, 0.05) 
+							shear_int = st.sidebar.slider('Random Shear', 0.0, 0.2, 0.05)  
+							zoom_int = st.sidebar.slider('Random Zoom', 0.0, 0.2, 0.05)
+							htrue = st.sidebar.selectbox('Horizontal Flip',('True','False'))
+							if htrue == 'True' :
+								horizon = True     
+							else :
+								horizon = False    
+							vtrue = st.sidebar.selectbox('Vertical Flip',('True','False'))
+							if vtrue == 'True' :
+								vertical = True     
+							else :
+								vertical = False  
+
+					elif not agree: 
+							rotate_int = 20
+							wshift_int = 0.2 
+							hshift_int = 0.2
+							shear_int = 0.2 
+							zoom_int = 0.2 
+							horizon = True
+							vertical = True 
 					for i in range(0, Npic) :
-						img_result = augment_img(converted_img)
+						img_result = augment_img(converted_img,rotate_int,wshift_int,hshift_int,shear_int,zoom_int,horizon,vertical)
 						imgs.append(img_result)
-					# st.markdown('<p style="text-align: center;">Results Below</p>',unsafe_allow_html=True)
+					st.image(imgs[0],None, width) 
+	 
 			#Default Original Image
 			else: 
-					st.image(image, width)
-
+					st.image(image,None, width)
 		if isRandom == 'Generate Dataset':
-			col1, col2, col3, col4 = st.columns( [3, 3, 3, 3]) 
+			st.subheader("Other Results :")
+			col1, col2, col3, col4, col5 = st.columns( [1, 1, 1, 1, 1]) 
 			with col1:
-				for i in range(0,len(imgs),4):
-					st.image(imgs[i], channels='RGB', width=width_aug)
+				for i in range(1,len(imgs),5):
+					st.image(imgs[i],None, width_aug)
 			with col2:
-				for i in range(1,len(imgs),4):
-					st.image(imgs[i], channels='RGB', width=width_aug) 
+				for i in range(2,len(imgs),5):
+					st.image(imgs[i],None, width_aug) 
 			with col3:
-				for i in range(2,len(imgs),4):
-					st.image(imgs[i], channels='RGB', width=width_aug) 
+				for i in range(3,len(imgs),5):
+					st.image(imgs[i],None, width_aug) 
 			with col4:
-				for i in range(3,len(imgs),4):
-					st.image(imgs[i], channels='RGB', width=width_aug)			
+				for i in range(4,len(imgs),5):
+					st.image(imgs[i],None, width_aug)	
+			with col5:
+				for i in range(5,len(imgs),5):
+					st.image(imgs[i],None, width_aug)     		
+
+# !!!!!!!!Page Config!!!!!!!!!!!
+st.set_page_config(
+    layout="wide",
+	page_title='เสี่ยโบ๊ตสั่งลุย',
+	page_icon='./assets/logo.png'
+)
+
 
 #Run code 
 if __name__ == '__main__':
