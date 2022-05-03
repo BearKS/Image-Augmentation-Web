@@ -5,6 +5,27 @@ import numpy as np
 import os
 from keras.preprocessing.image import ImageDataGenerator
 from numpy import expand_dims
+from io import BytesIO
+import sys
+from pathlib import Path
+from camera import orchestrator # Local Path
+
+file = Path(__file__).resolve()
+parent, root = file.parent, file.parents[1]
+sys.path.append(str(root))
+
+try:
+	sys.path.remove(str(parent))
+except ValueError:  # Already removed
+	pass
+
+
+VERSION = ".".join(st.__version__.split(".")[:2])
+
+demo_pages = {
+	"st.camera_input": orchestrator.show_examples,
+}
+
 
 # Global Variables
 width = 700
@@ -41,12 +62,21 @@ def augment_img(input_img,input_rotate,input_w_shift,input_h_shift,input_shear,i
 	result = batch[0].astype('uint8')
 	return result
 
+def draw_main_page():
+	st.write(
+		f"""
+		# Web Application For Image Augmentation! 👋
+		"""
+	)
 
 def main():
 	Npic = 0
 	imgs = []
+	# btn = []
 	isRandom = ''
-  
+	# photo = st.camera_input("First, take a picture...")
+ 	# photo = Image.fromarray(photo,'RGB')
+  	# photo.save('./photo.png')
 	st.sidebar.title("Image Augmentation")
 	with st.sidebar.expander("About the App"):
 		st.write("""
@@ -54,12 +84,42 @@ def main():
 			This web portal has been developed for educational purposes only. No intention to infringe any copyright or trademark.
 		""")
 		image = Image.open(r'./assets/logo.png') #Brand logo image (optional)
+ #---------------------------------------------------------------------------------------------
+	contributors = []
 
+	# Draw sidebar
+	pages = list(demo_pages.keys())
+
+	if len(pages):
+		pages.insert(0, "Upload ")
+		st.sidebar.title(f"Welcome🎈")
+		query_params = st.experimental_get_query_params()
+		if "page" in query_params and query_params["page"][0] == "headliner":
+			index = 1
+		else:
+			index = 0
+		selected_demo = st.sidebar.radio("", pages, index, key="pages")
+	else:
+		selected_demo = "None"
+
+	# Draw main page
+	if selected_demo in demo_pages:
+		uploaded_file = st.camera_input("take a picture...")
+		# uploaded_file = np.array(uploaded_file).as
+		# uploaded_file = Image.fromarray(uploaded_file, 'RGB')
+		# uploaded_file.save('./photo.jpg')
+	else:
+		st.image(image,None,width=50) # Display logo
+		st.header("Upload your image here...")
+		#file uploader to allow users to upload photos
+		uploaded_file = st.file_uploader("", type=['jpg','png','jpeg'])
+  
+#---------------------------------------------------------------------------------------------
+
+	# with Image.open('./assets/logo.png',"rb") as file:
+	# 	btn = st.sidebar.download_button(
+	# 			label="Download",data=file,file_name="flower.png",mime="image/png")
 	#Header!
-	st.image(image,None,width=50) # Display logo
-	st.header("Upload your image here...")
-	#file uploader to allow users to upload photos
-	uploaded_file = st.file_uploader("", type=['jpg','png','jpeg'])
  
 	if uploaded_file is not None:
 		image = Image.open(uploaded_file)
@@ -130,11 +190,35 @@ def main():
 					for i in range(0, Npic) :
 						img_result = augment_img(converted_img,rotate_int,wshift_int,hshift_int,shear_int,zoom_int,horizon,vertical)
 						imgs.append(img_result)
+						img_dataset = Image.fromarray(imgs[i], 'RGB')
+						img_dataset.save('./result_dataset/img'+ str(i) +'.jpg')
 					st.image(imgs[0],None, width) 
+					# img = Image.fromarray(imgs[0], 'RGB')
+					# img.save('./result_dataset/my.png')
+					# image2 = Image.open(r'./result_dataset/my.png')
+					# buf = BytesIO()
+					# image2.save(buf, format="png")
+					# byte_im = buf.getvalue()
+					# btn = st.sidebar.download_button(
+					# 	label="Download Image",
+					# 	data=byte_im,
+					# 	file_name="img.jpeg",
+					# 	mime="image/png",
+					# 	)
 	 
 			#Default Original Image
 			else: 
 					st.image(image,None, width)
+		# image = Image.open(r'./assets/logo.png')
+		# buf = BytesIO()
+		# image.save(buf, format="jpg")
+		# byte_im = buf.getvalue()
+		# btn = st.sidebar.download_button(
+		# 	label="Download Image",
+		# 	data=byte_im,
+		# 	file_name="imagename.jpg",
+		# 	mime="image/jpg",
+		# 	)
 		if isRandom == 'Generate Dataset':
 			st.subheader("Other Results :")
 			col1, col2, col3, col4, col5 = st.columns( [1, 1, 1, 1, 1]) 
@@ -153,10 +237,12 @@ def main():
 			with col5:
 				for i in range(5,len(imgs),5):
 					st.image(imgs[i],None, width_aug)     		
-
+	
+  
+  
 # !!!!!!!!Page Config!!!!!!!!!!!
 st.set_page_config(
-    layout="wide",
+	layout="wide",
 	page_title='เสี่ยโบ๊ตสั่งลุย',
 	page_icon='./assets/logo.png'
 )
